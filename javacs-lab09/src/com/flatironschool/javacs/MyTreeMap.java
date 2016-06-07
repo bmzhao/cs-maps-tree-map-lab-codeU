@@ -62,18 +62,31 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	 * @param target
 	 */
 	private Node findNode(Object target) {
+		return findNode(target, root);
+	}
+
+
+	private Node findNode(Object target, Node node) {
 		// some implementations can handle null as a key, but not this one
 		if (target == null) {
-            throw new NullPointerException();
-	    }
-		
+			throw new NullPointerException();
+		}
+
 		// something to make the compiler happy
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>) target;
-		
-		// the actual search
-        // TODO: Fill this in.
-        return null;
+		if (node == null) {
+			return null;
+		} else {
+			int cmp = k.compareTo(node.key);
+			if (cmp == 0) {
+				return node;
+			} else if (cmp < 0) {
+				return findNode(target, node.left);
+			} else {
+				return findNode(target, node.right);
+			}
+		}
 	}
 
 	/**
@@ -92,8 +105,21 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 
 	@Override
 	public boolean containsValue(Object target) {
-		return false;
+		return containsValue(target, root);
 	}
+
+	public boolean containsValue(Object target, Node node) {
+		if (node == null) {
+			return false;
+		} else {
+			if (equals(target, node.value)) {
+				return true;
+			} else {
+				return containsValue(target,node.left) || containsValue(target,node.right);
+			}
+		}
+	}
+
 
 	@Override
 	public Set<Map.Entry<K, V>> entrySet() {
@@ -116,10 +142,25 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 
 	@Override
 	public Set<K> keySet() {
+		return keySet(root);
+	}
+
+	private Set<K> keySet(Node node){
 		Set<K> set = new LinkedHashSet<K>();
-        // TODO: Fill this in.
+		if (node == null) {
+			return set;
+		} else {
+			if (node.left != null) {
+				set.addAll(keySet(node.left));
+			}
+			set.add(node.key);
+			if (node.right != null) {
+				set.addAll(keySet(node.right));
+			}
+		}
 		return set;
 	}
+
 
 	@Override
 	public V put(K key, V value) {
@@ -135,8 +176,33 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	}
 
 	private V putHelper(Node node, K key, V value) {
-        // TODO: Fill this in.
-        return null;
+		if (node.key.equals(key)) {
+			V old = node.value;
+			node.value = value;
+			return old;
+		} else {
+			@SuppressWarnings("unchecked")
+			Comparable<? super K> k = (Comparable<? super K>) key;
+			int cmp = k.compareTo(node.key);
+			if (cmp < 0) {
+				if (node.left == null) {
+					size++;
+					node.left = new Node(key, value);
+					return null;
+				} else {
+					return putHelper(node.left, key, value);
+				}
+			} else {
+//				cmp > 0
+				if (node.right == null) {
+					size++;
+					node.right = new Node(key, value);
+					return null;
+				} else {
+					return putHelper(node.right, key, value);
+				}
+			}
+		}
 	}
 
 	@Override
